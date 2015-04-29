@@ -505,9 +505,20 @@ export default Ember.Component.extend({
         data[sortField] = obj;
       }
     }
-
+    console.log(data.data, data.label);
     if (this._selectize && data.label) {
       this._selectize.addOption(data);
+      if (this.get('selection')){
+      var _this = this;
+      var selection = this.get('selection');
+      // Em.RSVP.all([selection])
+      //   .then(function(results){
+      //     selection = results[0]
+      //     if(selection === data.data){
+      //       _this._selectize.setValue(data.value);
+      //     }
+      //   });
+      }
     }
   },
   addLabelObserver: function(obj) {
@@ -531,18 +542,18 @@ export default Ember.Component.extend({
   * Ember Observer that triggers when an option's label changes.
   * Here we need to update its corresponding option with the new data
   */
-  _labelDidChange: function(sender) {
+  _labelDidChange: function(sender) { 
     if (!this._selectize) { return; }
     var data = {
       label: get(sender, this.get('_labelPath')),
       value: get(sender, this.get('_valuePath')),
       data: sender
     };
-
     if(this._selectize.getOption(data.value).length !== 0) {
       this._selectize.updateOption(data.value, data);
     } else {
       this.objectWasAdded(sender);
+      this.addLabelObserver(sender);
     }
   },
   /*
