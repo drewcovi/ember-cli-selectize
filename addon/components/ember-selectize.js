@@ -439,7 +439,7 @@ export default Ember.Component.extend({
   contentArrayWillChange: function(array, idx, removedCount) {
     for (var i = idx; i < idx + removedCount; i++) {
       var obj = array.objectAt(i);
-      if (obj.isError) {
+      if (!obj || obj.isError) {
         continue;
       }
       this.objectWasRemoved(obj);
@@ -505,20 +505,8 @@ export default Ember.Component.extend({
         data[sortField] = obj;
       }
     }
-    console.log(data.data, data.label);
     if (this._selectize && data.label) {
       this._selectize.addOption(data);
-      if (this.get('selection')){
-      var _this = this;
-      var selection = this.get('selection');
-      // Em.RSVP.all([selection])
-      //   .then(function(results){
-      //     selection = results[0]
-      //     if(selection === data.data){
-      //       _this._selectize.setValue(data.value);
-      //     }
-      //   });
-      }
     }
   },
   addLabelObserver: function(obj) {
@@ -534,15 +522,16 @@ export default Ember.Component.extend({
     if (typeOf(obj) === 'object' || typeOf(obj) === 'instance') {
       Ember.removeObserver(obj, this.get('_labelPath'), this, '_labelDidChange');
     }
-    if (this._selectize) {
-      this._selectize.removeOption(get(obj, this.get('_valuePath')));
+    var option = get(obj, this.get('_valuePath'))
+    if (this._selectize && option) {
+      this._selectize.removeOption(option);
     }
   },
   /*
   * Ember Observer that triggers when an option's label changes.
   * Here we need to update its corresponding option with the new data
   */
-  _labelDidChange: function(sender) { 
+  _labelDidChange: function(sender) {
     if (!this._selectize) { return; }
     var data = {
       label: get(sender, this.get('_labelPath')),
@@ -553,7 +542,7 @@ export default Ember.Component.extend({
       this._selectize.updateOption(data.value, data);
     } else {
       this.objectWasAdded(sender);
-      this.addLabelObserver(sender);
+      this._selectionDidChange();
     }
   },
   /*
